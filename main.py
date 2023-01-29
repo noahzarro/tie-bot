@@ -5,10 +5,10 @@ from telegram.ext import ApplicationBuilder, filters, ContextTypes, MessageHandl
 from datetime import date
 import random
 
+import os
 
 # create Bot
-with open("token.json","r") as read_file:
-    TOKEN = json.load(read_file)["token"]
+TOKEN = os.environ.get("TOKEN")
 app = ApplicationBuilder().token(TOKEN).build()
 
 
@@ -28,13 +28,20 @@ async def results(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if "results" in lines[i]:
             continue
         if ":" in lines[i]:
-            mensa = lines[i].split(":")[0]
-            score = int(lines[i].split("+")[1])
-            vote = {"mensa":mensa, "score":score}
-            votes.append(vote)
-            scores.append(score)
+            if "+" in lines[i]:
+                mensa = lines[i].split(":")[0]
+                score = int(lines[i].split("+")[1])
+                vote = {"mensa":mensa, "score":score}
+                votes.append(vote)
+                scores.append(score)
 
-    max_score = max(scores)
+    if len(scores) > 0:
+        max_score = max(scores)
+    else:
+        return await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="No mensas/scores found in message"
+        )
 
     mensas=[]
     for vote in votes:
